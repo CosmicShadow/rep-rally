@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Rep Rally</title>
+  <meta name="description" content="A phone-first workout tracker with weekly goals, streaks, progress charts, personal records and an AI coach.">
+  <meta name="theme-color" content="#2A5BD7">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='12' fill='none' stroke='%232A5BD7' stroke-width='6'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="brand">Rep<span>Rally</span></h1>
+    <div class="hello" id="hello"></div>
+  </header>
+
+  <!-- HOME -->
+  <section data-view="home">
+    <div class="banner" id="exampleBanner" hidden>
+      <span>These are example workouts so you can see how it works. Log your own and they disappear.</span>
+      <button class="btn small ghost" id="clearExamples">Clear</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>This week</h2><span class="eyebrow" id="weekLabel"></span></div>
+      <div class="week">
+        <svg class="ring" viewBox="0 0 108 108" id="ring" role="img" aria-label="Workouts this week against your goal"></svg>
+        <div class="stats">
+          <div class="stat"><b class="num" id="sMin">0</b><small>minutes</small></div>
+          <div class="stat"><b class="num" id="sStreak">0</b><small>day streak</small></div>
+          <div class="stat"><b class="num" id="sTotal">0</b><small>workouts all-time</small></div>
+          <div class="stat"><b class="num" id="sRpe">–</b><small>avg effort (RPE)</small></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pair">
+      <button class="btn primary" data-go="log">+ Log workout</button>
+      <button class="btn" id="pepBtn">Pep talk</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Recent</h2><span class="eyebrow" id="recentCount"></span></div>
+      <ul class="list" id="recent"></ul>
+    </div>
+  </section>
+
+  <!-- LOG -->
+  <section data-view="log" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Log a workout</h2></div>
+      <form id="logForm" novalidate>
+        <div class="types" role="group" aria-label="Workout type" id="typePick"></div>
+        <label class="f">What did you do?
+          <input id="fName" list="nameList" placeholder="e.g. Squats, Morning run" autocomplete="off">
+          <datalist id="nameList"></datalist>
+        </label>
+        <div class="row">
+          <label class="f">Date<input id="fDate" type="date"></label>
+          <label class="f">Minutes<input id="fMin" type="number" inputmode="numeric" min="1" max="600" placeholder="45"></label>
+        </div>
+        <div class="row" id="strengthFields">
+          <label class="f">Sets<input id="fSets" type="number" inputmode="numeric" min="1" placeholder="4"></label>
+          <label class="f">Reps<input id="fReps" type="number" inputmode="numeric" min="1" placeholder="8"></label>
+          <label class="f"><span>Weight (<span class="unitW">kg</span>)</span><input id="fWeight" type="number" inputmode="decimal" min="0" step="0.5" placeholder="60"></label>
+        </div>
+        <div class="row" id="cardioFields" hidden>
+          <label class="f"><span>Distance (<span class="unitD">km</span>)</span><input id="fDist" type="number" inputmode="decimal" min="0" step="0.01" placeholder="5"></label>
+        </div>
+        <label class="f">How hard was it? <span class="hint">RPE 1 = easy stroll, 10 = nothing left in the tank</span>
+          <span class="rpe"><input id="fRpe" type="range" min="1" max="10" value="7"><output id="rpeOut" class="num">7</output></span>
+        </label>
+        <label class="f">Notes<textarea id="fNotes" rows="2" placeholder="How did it feel?"></textarea></label>
+        <p id="formErr" class="hint error" hidden></p>
+        <button class="btn primary block" type="submit">Save workout</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section data-view="progress" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Minutes per week</h2><span class="eyebrow">last 8 weeks</span></div>
+      <svg class="chart" id="weekChart" viewBox="0 0 320 170" role="img" aria-label="Minutes trained per week"></svg>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Training mix</h2><span class="eyebrow">last 30 days</span></div>
+      <div class="mix" id="mix"></div>
+      <div class="legend" id="mixLegend"></div>
+    </div>
+    <div class="card">
+      <div class="card-head"><h2>Personal records</h2><span class="eyebrow">strength</span></div>
+      <div id="prs"></div>
+    </div>
+    <div class="card" id="settings">
+      <div class="card-head"><h2>Settings</h2></div>
+      <form id="settingsForm">
+        <div class="row">
+          <label class="f">Your name<input id="sName" placeholder="Optional" autocomplete="off"></label>
+          <label class="f">Weekly goal<select id="sGoal"></select></label>
+          <label class="f">Units<select id="sUnits"><option value="metric">kg / km</option><option value="imperial">lb / mi</option></select></label>
+        </div>
+        <label class="f">AI coach key <span class="hint">Paste an Anthropic API key from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. It stays in this browser and is only sent to Anthropic.</span>
+          <input id="sKey" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+        </label>
+        <div class="card-head" style="margin:0">
+          <span class="key-status" id="keyStatus"><i></i><span></span></span>
+          <button class="btn small ghost" type="button" id="removeKey">Remove key</button>
+        </div>
+        <label class="f">Coach model<select id="sModel"></select></label>
+        <button class="btn danger" type="button" id="wipe">Delete all my workouts</button>
+        <p class="hint">Your workouts are saved in this browser on this device only.</p>
+      </form>
+    </div>
+  </section>
+
+  <!-- COACH -->
+  <section data-view="coach" hidden>
+    <div class="card-head" style="margin:0">
+      <h2>Coach</h2>
+      <div class="tone" role="group" aria-label="Coach style">
+        <button data-tone="cheer" aria-pressed="true">Cheerleader</button>
+        <button data-tone="drill" aria-pressed="false">Drill sergeant</button>
+      </div>
+    </div>
+    <div class="chips" id="chips">
+      <button>Hype me up for today</button>
+      <button>Plan my next workout</button>
+      <button>How am I doing this week?</button>
+      <button>How do I push harder safely?</button>
+    </div>
+    <p class="offline" id="offlineNote" hidden>The AI coach is off. Add your Anthropic API key in <a href="#settings" id="toSettings">Settings</a> to chat. Until then, you'll get quick pep lines.</p>
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <form class="composer" id="composer">
+      <textarea id="ask" rows="1" placeholder="Ask your coach anything" aria-label="Message to coach"></textarea>
+      <button class="btn primary" id="sendBtn" type="submit">Send</button>
+      <button class="btn" id="stopBtn" type="button" hidden>Stop</button>
+    </form>
+    <button class="btn small ghost" id="clearChat" style="align-self:flex-start">Clear chat</button>
+  </section>
+</div>
+
+<nav class="tabs" aria-label="Sections">
+  <button data-tab="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button data-tab="log"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8v8M18 8v8M3 10v4M21 10v4M6 12h12"/></svg>Log</button>
+  <button data-tab="progress"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Progress</button>
+  <button data-tab="coach"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Coach</button>
+</nav>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="js/stats.js"></script>
+<script src="js/coach.js"></script>
+<script src="js/storage.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

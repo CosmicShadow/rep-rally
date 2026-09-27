@@ -1,0 +1,14 @@
+{
+  "name": "rep-rally",
+  "version": "1.0.0",
+  "description": "A phone-first workout tracker with progress charts and an AI coach powered by Claude.",
+  "private": true,
+  "scripts": {
+    "test": "node --test",
+    "start": "node scripts/serve.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
